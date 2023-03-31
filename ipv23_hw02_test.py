@@ -76,18 +76,19 @@ def edgeSobel_x():
 
 
 def edgeSobel_y():
-  output_filter = np.array([[1, 2, 1],
+  output_filter = np.array([[-1, -2, -1],
                             [0, 0, 0],
-                            [-1, -2, -1]])
+                            [1, 2, 1]])
 
   return output_filter
+
 
 
 ##############################################
 #              Gradient Magnitude            #
 ##############################################
 def magGrad(edge_x, edge_y):
-
+  magnitude_grad = np.sqrt(edge_x * edge_x + edge_y * edge_y)
   
   return magnitude_grad
 
@@ -96,13 +97,13 @@ def magGrad(edge_x, edge_y):
 #             Gradient Orientation           #
 ##############################################
 def angleGrad(edge_x, edge_y):
-
+  angle_grad = np.arctan2(edge_y, edge_x) * 180 / np.pi
   
   return angle_grad
 
 
 ##############################################
-#           Main Function for HW02-2         #
+#           Main Function for HW02-1         #
 ##############################################
 
 img = loadImg('lenna.png')
@@ -112,6 +113,18 @@ filter_gy = edgeSobel_y()
 
 out_sobel_x = conv(img, filter_gx)
 out_sobel_y = conv(img, filter_gy)
+
+plt.imshow(out_sobel_x, cmap='gray')
+plt.title("Vertical Edge Map by Sobel Filter")
+plt.show()
+
+plt.imshow(out_sobel_y, cmap='gray')
+plt.title("Horizontal Edge Map by Sobel Filter")
+plt.show()
+
+saveImg(out_sobel_x, 'Vertical edge map.png')
+saveImg(out_sobel_y, 'Horizontal edge map.png')
+
 
 # Magnitude of Gradient
 out_magnitude_sobel = magGrad(out_sobel_x, out_sobel_y)
