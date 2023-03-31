@@ -8,7 +8,7 @@ import numpy as np
 import math
 
 # Define the directory
-dir = '/IPV23_HW2/test_imgs/' # File path
+dir = 'IPV23_HW2/test imgs/' # File path
 
 # Define the functions for the load and save the input image
 
@@ -29,7 +29,7 @@ def loadImg(in_fname):
 def saveImg(out_img, out_fname):
   cv2.imwrite(dir + out_fname, out_img)
 
-  ##############################################
+##############################################
 #            Convolution Operator            #
 ##############################################
 def conv(image, filter):
@@ -69,21 +69,41 @@ def conv(image, filter):
 ##############################################
 def edgeSobel_x():
 
-  ############################################
-  ##                                        ##
-  ##             YOUR CODE HERE             ##
-  ##                                        ##
-  ############################################
+  output_filter = np.array([[-1, 0, 1],
+                            [-2, 0, 2],
+                            [-1, 0, 1]])
 
   return output_filter
 
 
 def edgeSobel_y():
 
-  ############################################
-  ##                                        ##
-  ##             YOUR CODE HERE             ##
-  ##                                        ##
-  ############################################
+  output_filter = np.array([[1, 2, 1],
+                            [0, 0, 0],
+                            [-1, -2, -1]])
 
   return output_filter
+
+
+##############################################
+#           Main Function for HW02-1         #
+##############################################
+
+img = loadImg('lenna.png')
+
+filter_gx = edgeSobel_x()
+filter_gy = edgeSobel_y()
+
+out_sobel_x = conv(img, filter_gx)
+out_sobel_y = conv(img, filter_gy)
+
+plt.imshow(out_sobel_x, cmap='gray')
+plt.title("Vertical Edge Map by Sobel Filter")
+plt.show()
+
+plt.imshow(out_sobel_y, cmap='gray')
+plt.title("Horizontal Edge Map by Sobel Filter")
+plt.show()
+
+saveImg(out_sobel_x, 'Vertical edge map.png')
+saveImg(out_sobel_y, 'Horizontal edge map.png')

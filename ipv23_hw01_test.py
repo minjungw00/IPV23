@@ -9,7 +9,7 @@ import math
 import time
 
 # Define the directory
-dir = '/IPV23_HW1/test_imgs/' # File path
+dir = 'IPV23_HW1/test imgs/' # File path
 
 # Define the functions for the load and save the input image
 
