@@ -76,9 +76,9 @@ def edgeSobel_x():
 
 
 def edgeSobel_y():
-  output_filter = np.array([[-1, -2, -1],
+  output_filter = np.array([[1, 2, 1],
                             [0, 0, 0],
-                            [1, 2, 1]])
+                            [-1, -2, -1]])
 
   return output_filter
 
@@ -97,9 +97,19 @@ def magGrad(edge_x, edge_y):
 #             Gradient Orientation           #
 ##############################################
 def angleGrad(edge_x, edge_y):
-  angle_grad = np.arctan2(edge_y, edge_x) * 180 / np.pi
+  angle_grad = np.arctan2(edge_y, edge_x) * (180 / np.pi)
   
   return angle_grad
+
+
+##############################################
+#            Set Gradient Threshold          #
+##############################################
+def setThreshold(image, threshold):
+  output_grad = np.where(image < threshold, 0, image)
+
+  return output_grad
+
 
 
 ##############################################
@@ -140,6 +150,17 @@ out_angle_sobel = angleGrad(out_sobel_y, out_sobel_x)
 plt.imshow(out_angle_sobel, cmap='gray')
 plt.title("Gradient Orientation Map")
 plt.show()
+
+
+# Set Threshold of Gradient
+threshold = 100
+
+out_magnitude_sobel_threshold = setThreshold(out_magnitude_sobel, threshold)
+
+plt.imshow(out_magnitude_sobel_threshold, cmap='gray')
+plt.title(f"Gradient Magnitude Map with Threshold {threshold}")
+plt.show()
+
 
 saveImg(out_magnitude_sobel, 'Gradient magnitude map.png')
 saveImg(out_angle_sobel,   'Gradient orientation map.png')
