@@ -54,7 +54,7 @@ def SIFT(img):
         des(ndarray) : descriptors array of shape (number of keypoints) * 128
     """
 
-    siftDetector= cv2.xfeatures2d.SIFT_create() # limit 1000 points
+    siftDetector = cv2.xfeatures2d.SIFT_create() # limit 1000 points
     # siftDetector= cv2.SIFT_create()  # depends on OpenCV version
 
     kp, des = siftDetector.detectAndCompute(img, None)
