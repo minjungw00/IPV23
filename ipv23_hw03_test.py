@@ -54,8 +54,8 @@ def SIFT(img):
         des(ndarray) : descriptors array of shape (number of keypoints) * 128
     """
 
-    siftDetector = cv2.xfeatures2d.SIFT_create() # limit 1000 points
-    # siftDetector= cv2.SIFT_create()  # depends on OpenCV version
+    # siftDetector = cv2.xfeatures2d.SIFT_create() # limit 1000 points
+    siftDetector= cv2.SIFT_create()  # depends on OpenCV version
 
     kp, des = siftDetector.detectAndCompute(img, None)
     return kp, des  # keypoints & descriptors
@@ -67,7 +67,7 @@ def SIFT(img):
 def siftMatch(kp1, des1, img1, kp2, des2, img2, threshold):
     """
     siftMatch(kp1, des1, img1, kp2, des2, img2, threshold) -> matches\n
-    Match the keypoints of the two images
+    Match the keypoints of two images through descriptors.
 
     input
         kp(tuple) : keypoints of each image
@@ -102,7 +102,7 @@ def siftMatch(kp1, des1, img1, kp2, des2, img2, threshold):
 def homography(pairs):
     """
     homography(pairs) -> H\n
-    Calculate projective transform matrix
+    Calculate projective transform matrix.
     
     input
         pairs(ndarray) : array of point pairs
@@ -205,7 +205,7 @@ def stitchImg(left, right, H):
 def plot_sift(gray_img, rgb_img, keypnt):
     """
     plot_sift(gray_img, rgb_img, keypnt) -> sift_on_img\n
-    Draw keypoints from gray image to rgb image
+    Draw keypoints from gray image to rgb image.
 
     input
         gray_img(ndarray) : image converted to gray
@@ -222,7 +222,7 @@ def plot_sift(gray_img, rgb_img, keypnt):
 def plot_matches(matches, total_img):
     """
     plot_matches(matches, total_img)\n
-    Shows matched keypoints connected by a line
+    Shows matched keypoints connected by a line.
     
     input
         matches(ndarray) : array of matched keypoints
@@ -293,7 +293,7 @@ def ransac(matches, k_samples, threshold, iters):
 def randomPoint(matches, k_samples):
     """
     randomPoint(matches, k_samples) -> rand_pnt\n
-    Return the randomly sampled keypoints
+    Return the randomly sampled keypoints.
 
     input
         matches(ndarray) : array of matched keypoints
@@ -306,21 +306,21 @@ def randomPoint(matches, k_samples):
         
     return np.array(rand_pnt) 
 
-def getError(rand_pnt, H):
+def getError(matches, H):
     """
-    getError(rand_pnt, H) -> errors\n
-    Calculate errors by comparing the random points with the matrix transformation points.
+    getError(matches, H) -> errors\n
+    Calculate errors by comparing matching points with the matrix transformation points.
     
     input
-        rand_pnt(ndarray) : random sample points of keypoints array
+        matches(ndarray) : array of matched keypoints
         H(ndarray) : 3x3 projective transformation matrix
     output
         errors(ndarray) : difference between keypoints and matrix transformation values
     """
 
-    num_points = len(rand_pnt)
-    all_p1 = np.concatenate((rand_pnt[:, 0:2], np.ones((num_points, 1))), axis=1)
-    all_p2 = rand_pnt[:, 2:4]
+    num_points = len(matches)
+    all_p1 = np.concatenate((matches[:, 0:2], np.ones((num_points, 1))), axis=1)
+    all_p2 = matches[:, 2:4]
 
     est_p2 = np.zeros((num_points, 2))
     for i in range(num_points):
@@ -337,6 +337,42 @@ def getError(rand_pnt, H):
 
 # endregion
 
+def make_panorama(num, dw, dh):
+    fname_left = f'img_{num:02d}_left.jpg'
+    fname_right = f'img_{num:02d}_right.jpg'
+
+    img_left  = cv2.resize(cv2.imread(dir + fname_left), dsize=(dw, dh))
+    img_right = cv2.resize(cv2.imread(dir + fname_right), dsize=(dw, dh))
+
+    gray_left = cv2.cvtColor(img_left, cv2.COLOR_RGB2GRAY)
+    gray_right = cv2.cvtColor(img_right, cv2.COLOR_RGB2GRAY)
+    
+    kp_left, des_left = SIFT(gray_left)
+    kp_right, des_right = SIFT(gray_right)
+
+    print(len(kp_left))   # The number of keypoints on the left image
+    print(des_left.shape) # The 128-dimensional descriptor for each keypoint
+
+    # kp_left_img = plot_sift(gray_left, img_left, kp_left)
+    # kp_right_img = plot_sift(gray_right, img_right, kp_right)
+    # total_kp = np.concatenate((kp_left_img, kp_right_img), axis=1)
+    # plt.imshow(total_kp)
+
+    matches = siftMatch(kp_left, des_left, img_left, kp_right, des_right, img_right, 0.5)   # The coordinates of the matched correspondences p1=[x, y] and p2=[x', y']
+    temp_img = np.concatenate((img_left, img_right), axis=1)
+    # plot_matches(matches, temp_img) # Good mathces
+
+    print(matches.shape)  # The number of well-matched keypoints (i.e., correspondences)
+    
+    inliers, H = ransac(matches, (int)(matches.shape[0] * 0.5), 0.5, 1000)
+    # plot_matches(inliers, temp_img) # show inliers matches
+    
+    panoramic_img = stitchImg(img_left, img_right, H)*255
+    cv2.imshow('panoramic_img', panoramic_img)
+    saveImg(panoramic_img, f'panoramic_img_{num:02d}.png')
+    return
+
+
 
 # region Run the Man Function and Get Panorama Image!
 
@@ -345,6 +381,13 @@ def getError(rand_pnt, H):
 ##############################################
 
 if __name__ == "__main__":
+
+    '''
+    for i in range(1, 18):
+        print(f"start stitching image {i:02d}...")
+        make_panorama(i, 1200, 900)
+        print(f"image {i:02d} done")
+    '''
 
     fname_left = 'img_left.jpg'
     fname_right = 'img_right.jpg'
@@ -368,12 +411,12 @@ if __name__ == "__main__":
 
     matches = siftMatch(kp_left, des_left, img_left, kp_right, des_right, img_right, 0.5)   # The coordinates of the matched correspondences p1=[x, y] and p2=[x', y']
     temp_img = np.concatenate((img_left, img_right), axis=1)
-    plot_matches(matches, temp_img) # Good mathces
+    # plot_matches(matches, temp_img) # Good mathces
 
     print(matches.shape)  # The number of well-matched keypoints (i.e., correspondences)
     
     
-    inliers, H = ransac(matches, 400, 0.5, 1000)
+    inliers, H = ransac(matches, (int)(matches.shape[0] * 0.5), 0.5, 1000)
     plot_matches(inliers, temp_img) # show inliers matches
     
     panoramic_img = stitchImg(img_left, img_right, H)*255
