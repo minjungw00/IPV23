@@ -41,6 +41,18 @@ def inRange(cordinates, limits):
 #                Opticla Flow                #
 ##############################################
 def opticalFlow(prev_fr, next_fr, window_size, min_quality=0.01):
+    """
+    opticalFlow(prev_fr, next_fr, window_size, min_quality) -> (u, v)\n
+    Obtain (u,v) from Lucas Kanade's optical flow approach
+    
+    input
+        prev_fr(ndarray) : previous frame image
+        next_fr(ndarray) : next frame image
+        window_size(int) : size of window centered in pixels
+        min_quality(int) : minimum quality of corner detection
+    output
+        u, v(ndarray) : u, v of the optical flow constraint equation
+    """
 
     max_corners = 10000
     min_distance = 0.1
@@ -51,13 +63,11 @@ def opticalFlow(prev_fr, next_fr, window_size, min_quality=0.01):
     prev_fr = prev_fr / 255
     next_fr = next_fr / 255
 
-    ############################################
-    ##       COMPLETE THE FOLLOWING CODE      ##
-    ############################################    
-    # Compute the gradients w.r.to X, Y and T dimensions    
-    fx = [] # Gradient of x-axis
-    fy = [] # Gradient of y-axis
-    ft = [] # Gradient of time
+    # Compute the gradients w.r.to X, Y and T dimensions 
+    # Solve with Sobel Edge detection 
+    fx = cv2.Sobel(prev_fr, cv2.CV_64F, 1, 0, ksize=5) # Gradient of x-axis
+    fy = cv2.Sobel(prev_fr, cv2.CV_64F, 0, 1, ksize=5) # Gradient of y-axis
+    ft = next_fr - prev_fr # Gradient of time
     
     u = np.zeros(prev_fr.shape)
     v = np.zeros(prev_fr.shape)
@@ -70,17 +80,16 @@ def opticalFlow(prev_fr, next_fr, window_size, min_quality=0.01):
         I_y = fy[i-w:i+w+1, j-w:j+w+1].flatten()
         I_t = ft[i-w:i+w+1, j-w:j+w+1].flatten()
 
-        ############################################
-        ##       COMPLETE THE FOLLOWING CODE      ##
-        ############################################
         # Set the vector A and b for Ax=b to solve the equation for optical flow
-        # Then, find the x_hat vector, which is the predicted optical flow vector      
-        A = []
-        b = []
-        x_hat = [] # Predicted u and v
+        A = np.column_stack((I_x, I_y))
+        b = -I_t
 
-        u[i,j] = x_hat[0][0]
-        v[i,j] = x_hat[1][0]
+        # find the x_hat vector, which is the predicted optical flow vector
+        # Solve with least squares
+        x_hat = np.dot(np.linalg.pinv(np.dot(A.T, A)), np.dot(A.T, b))  # Predicted u and v
+
+        u[i,j] = x_hat[0]
+        v[i,j] = x_hat[1]
 
     return (u, v)
 
