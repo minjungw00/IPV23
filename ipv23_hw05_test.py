@@ -48,6 +48,7 @@ cifar_train_loader = DataLoader(cifar_train, batch_size=128, shuffle=True, num_w
 cifar_test_loader = DataLoader(cifar_test, batch_size=128, shuffle=False, num_workers=2)
 # endregion
 
+"""
 # region (Practice) Implement Each Component of CNNs
 # Example of convolutional layer
 
@@ -163,7 +164,7 @@ with torch.no_grad():
     print('Accuracy of Simple CNN on MNIST test set: {} %'.format(100 * correct / total))
 
 # endregion
-
+"""
 
 # Change the following CNNs architecture
 
@@ -171,27 +172,38 @@ class myConvNet(nn.Module):
 
     def __init__(self):
         super(myConvNet, self).__init__()
-        # 3 input image channel, 32 output channels, 7x7 square convolution, 1 stride
         self.conv_layer1 = nn.Sequential(
-            nn.Conv2d(3, 32, 7),
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-        )
-        # 32 input image channel, 64 output channels, 7x7 square convolution, 1 stride
-        self.conv_layer2 = nn.Sequential(
-            nn.Conv2d(32, 64, 7),
+            nn.Conv2d(3, 64, 3),
             nn.BatchNorm2d(64),
             nn.ReLU(),
         )
+        self.conv_layer2 = nn.Sequential(
+            nn.Conv2d(64, 128, 3, stride = 2),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+        )
+        self.conv_layer3 = nn.Sequential(
+            nn.Conv2d(128, 256, 3, stride = 2),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+        )
+        self.conv_layer3 = nn.Sequential(
+            nn.Conv2d(256, 512, 3, stride = 2),
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+        )
 
-        self.fc = nn.Linear(64*20*20, 10)
+        self.fc = nn.Linear(512*2*2, 10)
 
     def forward(self, x):
         out_conv1 = self.conv_layer1(x)
         out_conv2 = self.conv_layer2(out_conv1)
-        feature_1d = torch.flatten(out_conv2, 1)
+        out_conv3 = self.conv_layer3(out_conv2)
+        out_conv4 = self.conv_layer4(out_conv3)
+        feature_1d = torch.flatten(out_conv4, 1)
         out = self.fc(feature_1d)
         return out
+
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -202,7 +214,7 @@ model = model.to(device)
 
 
 # Optimizer: Stochastic Gradient Descent Method
-optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.008)
 
 # Define Loss function
 loss_fn = nn.CrossEntropyLoss()
